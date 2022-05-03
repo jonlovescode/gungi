@@ -1,0 +1,23 @@
+#gungiboard {
+  /* display: -ms-inline-grid; */
+  float: left;
+  display: grid;
+  grid-template-columns: repeat(9, 70px);
+  grid-template-rows: repeat(9, 70px);
+  width: 630px;
+  height: 630px;
+  background-color: blue;
+  margin: 20px;
+}
+
+#sideboard {
+  display: -ms-inline-grid;
+  float: right;
+  display: grid;
+  grid-template-columns: repeat(3, 70px);
+  grid-template-rows: repeat(4, 70px);
+  width: 210;
+  height: 420;
+  margin: 20px;
+  margin-top: 190px;
+}
