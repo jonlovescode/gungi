@@ -9,11 +9,9 @@ export default function Gungiboard() {
   //initialize coordinates for key values for main-side-boards
   const main_yAxis = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
   const main_xAxis = ["a", "b", "c", "d", "e", "f", "g", "h", "i"];
-  const main_zAxis = ["1", "2", "3"];
 
   const side_xAxis = ["1", "2", "3", "4"];
   const side_yAxis = ["j", "k", "l"];
-  // const side_zAxis = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
 
   const mainStart = [];
   for (let i = 0; i < main_xAxis.length; i++) {
@@ -54,6 +52,82 @@ export default function Gungiboard() {
   sideStart[1][0].push({image: "assets/gungi_trad/black_pieces/b_zhong.png",});
   sideStart[2][0].push({image: "assets/gungi_trad/black_pieces/b_xiao.png",});
   sideStart[3][0].push({image: "assets/gungi_trad/black_pieces/b_pawn.png",});
+
+  let activePiece;
+  const gungiRef = useRef(null);
+  const sideRef = useRef(null);
+  // const sideselectX = useRef
+
+
+  function grabPiece(e: React.MouseEvent) {
+    const gungiside = sideRef.current;
+    const gungiboard = gungiRef.current;
+    console.log(e, 'this is e', gungiside)
+
+    //add piece to sideboard, maybe gray piece? solid piece appears after dropped, or gray piece w/ number
+    console.log(e.target, "this is the target");
+    const element = e.target;
+    if (gungiside && element.classList.contains("chess-piece")) {
+      console.log("grab", e);
+      const x = e.clientX - 35;
+      const y = e.clientY - 35;
+
+      const ycoor = Math.floor((e.clientX - gungiside.offsetLeft) / 70);
+      const xcoor = Math.floor((e.clientY - gungiside.offsetTop) / 70);
+      element.style.position = "absolute";
+      element.style.left = `${x}px`; // jump to center of grab
+      element.style.top = `${y}px`;
+
+      activePiece = element;
+      console.log(activePiece, 'activepiece here')
+
+      console.log(ycoor, xcoor, 'coors', x, y, gungiside)
+      const len = element.style.backgroundImage.length;
+      const rempiece = element.style.backgroundImage.slice(5, len - 2);
+    }
+  }
+
+  function movePiece(e: React.MouseEvent) {
+
+    if (activePiece) {
+
+      const x = e.clientX - 35;
+      const y = e.clientY - 35;
+      activePiece.style.position = "absolute";
+      activePiece.style.left = `${x}px`;
+      activePiece.style.top = `${y}px`;
+    }
+  }
+
+  function dropPiece(e: React.MouseEvent) {
+    const element = e.target;
+    const len = element.style.backgroundImage.length;
+    console.log(element.style.backgroundImage.slice(36, len - 6));
+    element.remove();
+    const rempiece = element.style.backgroundImage.slice(5, len - 2);
+    console.log(rempiece, "rempiece");
+
+    const gungiboard = gungiRef.current;
+
+    if (activePiece && gungiboard) {
+
+      const y = Math.floor((e.clientX - gungiboard.offsetLeft) / 70);
+      const x = Math.floor((e.clientY - gungiboard.offsetTop) / 70);
+      console.log(x, y);
+
+      setMain((value) => {
+        console.log(value, "value here");
+        const pieces = value.map((p) => {
+          if (p.x === x && p.y === y) {
+            p.image = rempiece;
+          }
+          return p;
+        });
+        return pieces;
+      });
+      activePiece = null;
+    }
+  }
 
   function topview(matrix) { //convert 3d to 2d array to use for gungi-side boards
     let topview = [];
@@ -104,7 +178,11 @@ export default function Gungiboard() {
   return (
     <div>
       <div id="gungiboard">{mainboard}</div>
-      <div id="sideboard">{sideboard}</div>
+      <div
+        onMouseMove={(e) => movePiece(e)}
+        onMouseDown={(e) => grabPiece(e)}
+        onMouseUp={(e) => dropPiece(e)}
+        id="sideboard">{sideboard}</div>
     </div>
   );
 }
