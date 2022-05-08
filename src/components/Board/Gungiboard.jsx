@@ -18,14 +18,10 @@ export default function Gungiboard() {
     let row = [];
     for (let j = 0; j < main_yAxis.length; j++) {
       let col = [];
-      // for (let k = 0; k < main_zAxis.length; k ++) {
-      //   col.push({image: ''});
-      // }
       row.push(col);
     }
     mainStart.push(row);
   }
-  console.log(mainStart);
 
   const sideStart = [];
   for (let i = 0; i < side_xAxis.length; i++) {
@@ -35,6 +31,8 @@ export default function Gungiboard() {
     }
     sideStart.push(row);
   }
+
+  // console.log('starting matrices: ', mainStart, sideStart)
 
   sideStart[0][2].push({image: "assets/gungi_trad/black_pieces/b_queen.png",}); // second copy of black queen for test purpose
 
@@ -59,35 +57,32 @@ export default function Gungiboard() {
   // const sideselectX = useRef
 
 
-  function grabPiece(e: React.MouseEvent) {
+  let activePieceCoord = {};
+  function grabPiece(e) {
     const gungiside = sideRef.current;
     const gungiboard = gungiRef.current;
-    console.log(e, 'this is e', gungiside)
 
-    //add piece to sideboard, maybe gray piece? solid piece appears after dropped, or gray piece w/ number
-    console.log(e.target, "this is the target");
     const element = e.target;
     if (gungiside && element.classList.contains("chess-piece")) {
-      console.log("grab", e);
       const x = e.clientX - 35;
       const y = e.clientY - 35;
 
-      const ycoor = Math.floor((e.clientX - gungiside.offsetLeft) / 70);
-      const xcoor = Math.floor((e.clientY - gungiside.offsetTop) / 70);
       element.style.position = "absolute";
-      element.style.left = `${x}px`; // jump to center of grab
+      element.style.left = `${x}px`;
       element.style.top = `${y}px`;
 
       activePiece = element;
-      console.log(activePiece, 'activepiece here')
-
-      console.log(ycoor, xcoor, 'coors', x, y, gungiside)
       const len = element.style.backgroundImage.length;
       const rempiece = element.style.backgroundImage.slice(5, len - 2);
+
+      activePieceCoord.c = Math.floor((e.clientX - gungiside.offsetLeft) / 70);
+      activePieceCoord.r = Math.floor((e.clientY - gungiside.offsetTop) / 70);
+
+
     }
   }
 
-  function movePiece(e: React.MouseEvent) {
+  function movePiece(e) {
 
     if (activePiece) {
 
@@ -99,33 +94,61 @@ export default function Gungiboard() {
     }
   }
 
-  function dropPiece(e: React.MouseEvent) {
+  function dropPiece(e) {
     const element = e.target;
     const len = element.style.backgroundImage.length;
-    console.log(element.style.backgroundImage.slice(36, len - 6));
-    element.remove();
-    const rempiece = element.style.backgroundImage.slice(5, len - 2);
-    console.log(rempiece, "rempiece");
 
+    const rempiece = element.style.backgroundImage.slice(5, len - 2);
     const gungiboard = gungiRef.current;
 
     if (activePiece && gungiboard) {
+      // element.remove();
 
-      const y = Math.floor((e.clientX - gungiboard.offsetLeft) / 70);
-      const x = Math.floor((e.clientY - gungiboard.offsetTop) / 70);
-      console.log(x, y);
+      const c = Math.floor((e.clientX - gungiboard.offsetLeft) / 70);
+      const r = Math.floor((e.clientY - gungiboard.offsetTop) / 70);
 
-      setMain((value) => {
-        console.log(value, "value here");
-        const pieces = value.map((p) => {
-          if (p.x === x && p.y === y) {
-            p.image = rempiece;
+      // console.log('dropPiece CONSOLELOG: ', x, y, gungiboard.offsetLeft, gungiboard.offsetTop);
+
+      // console.log('BEFORE SETMAIN this is the active piece: ', activePiece)
+
+      setMain((board) => {
+        const newboard = []
+        for (let i = 0; i < board.length; i++) {
+          let row = [];
+          for (let j = 0; j < board.length; j++) {
+            let col = board[i][j].slice();
+            if (i === r && j === c && col.length < 3) {
+              col.push({image: rempiece})
+            }
+            row.push(col);
           }
-          return p;
+          newboard.push(row);
+        }
+        setSide((sideBoard) => {
+          let newBoard = [];
+
+          console.log('SETSIDE sideboard viewer: ', sideBoard);
+          for (let i = 0; i < sideBoard.length; i++) {
+            let row = [];
+            for (let j = 0; j < sideBoard[0].length; j++) {
+              let col = sideBoard[i][j].slice();
+              if (i === activePieceCoord.r && j === activePieceCoord.c && col.length < 3 && col.length > 0) {
+                console.log('popping!!!', i, j)
+                col.pop();
+              }
+              row.push(col);
+            }
+            newBoard.push(row);
+          }
+          console.log('are we returning?');
+          return newBoard;
         });
-        return pieces;
-      });
-      activePiece = null;
+        activePiece = null;
+        return newboard;
+      })
+
+
+
     }
   }
 
@@ -143,8 +166,8 @@ export default function Gungiboard() {
     return topview;
   }
 
-  console.log(topview(mainStart));
-  console.log(topview(sideStart));
+  // console.log(topview(mainStart));
+  // console.log(topview(sideStart));
   //useState to initialize mainboard and sideboard
   const [main, setMain] = useState(mainStart);
   const [side, setSide] = useState(sideStart);
@@ -153,8 +176,11 @@ export default function Gungiboard() {
   let mainboard = [];
   let sideboard = [];
 
+  // console.log('this is main', main);
   let maintop = topview(main);
   let sidetop = topview(side);
+
+  console.log('NOTICE MEEEEEEEEEEEEEEEEEEEEE', side);
 
   for (let i = 0; i < maintop.length; i++) {
     for (let j = 0; j < maintop[0].length; j++) {
@@ -166,7 +192,6 @@ export default function Gungiboard() {
 
   for (let i = 0; i < sidetop.length; i++) {
     for (let j = 0; j < sidetop[0].length; j++) {
-      console.log(sidetop[i][j].image);
       sideboard.push(
         <Tile image={sidetop[i][j] ? sidetop[i][j].image : ''} key={main_xAxis[i] + main_yAxis[j]}></Tile>
       );
@@ -176,13 +201,45 @@ export default function Gungiboard() {
   //nested for loops to instantiate main and side boards
 
   return (
-    <div>
-      <div id="gungiboard">{mainboard}</div>
+    <>
+      <div id="gungiboard"
+        ref={gungiRef}
+      >{mainboard}</div>
       <div
         onMouseMove={(e) => movePiece(e)}
         onMouseDown={(e) => grabPiece(e)}
         onMouseUp={(e) => dropPiece(e)}
-        id="sideboard">{sideboard}</div>
-    </div>
+        id="sideboard"
+        ref={sideRef}>{sideboard}</div>
+    </>
   );
 }
+
+
+// const element = e.target;
+// const len = element.style.backgroundImage.length;
+// console.log(element.style.backgroundImage.slice(36, len - 6));
+// element.remove();
+// const rempiece = element.style.backgroundImage.slice(5, len - 2);
+// console.log(rempiece, "rempiece");
+
+// const gungiboard = gungiRef.current;
+
+// if (activePiece && gungiboard) {
+
+//   const y = Math.floor((e.clientX - gungiboard.offsetLeft) / 70);
+//   const x = Math.floor((e.clientY - gungiboard.offsetTop) / 70);
+//   console.log(x, y);
+
+//   setMain((value) => {
+//     console.log(value, "value here");
+//     const pieces = value.map((p) => {
+//       if (p.x === x && p.y === y) {
+//         p.image = rempiece;
+//       }
+//       return p;
+//     });
+//     return pieces;
+//   });
+//   activePiece = null;
+// }
